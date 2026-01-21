@@ -231,12 +231,20 @@ export function setupIpcHandlers(): void {
     return habitService.delete(id);
   });
 
-  ipcMain.handle(IPC_CHANNELS.HABIT_COMPLETE, (_event, habitId, date) => {
-    return habitService.complete(habitId, date);
+  ipcMain.handle(IPC_CHANNELS.HABIT_COMPLETE, (_event, habitId, date, note) => {
+    return habitService.complete(habitId, date, note);
   });
 
   ipcMain.handle(IPC_CHANNELS.HABIT_UNCOMPLETE, (_event, habitId, date) => {
     return habitService.uncomplete(habitId, date);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.HABIT_DECREMENT, (_event, habitId, date) => {
+    return habitService.decrementCompletion(habitId, date);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.HABIT_UPDATE_NOTE, (_event, habitId, date, note) => {
+    return habitService.updateCompletionNote(habitId, date, note);
   });
 
   ipcMain.handle(IPC_CHANNELS.HABIT_GET_COMPLETIONS, (_event, habitId, startDate, endDate) => {

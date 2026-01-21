@@ -177,10 +177,14 @@ const electronAPI = {
       ipcRenderer.invoke(IPC_CHANNELS.HABIT_UPDATE, id, data),
     delete: (id: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.HABIT_DELETE, id),
-    complete: (habitId: string, date?: string): Promise<HabitCompletion | null> =>
-      ipcRenderer.invoke(IPC_CHANNELS.HABIT_COMPLETE, habitId, date),
+    complete: (habitId: string, date?: string, note?: string): Promise<HabitCompletion | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.HABIT_COMPLETE, habitId, date, note),
     uncomplete: (habitId: string, date?: string): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.HABIT_UNCOMPLETE, habitId, date),
+    decrement: (habitId: string, date?: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.HABIT_DECREMENT, habitId, date),
+    updateNote: (habitId: string, date: string, note: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.HABIT_UPDATE_NOTE, habitId, date, note),
     getCompletions: (habitId: string, startDate?: string, endDate?: string): Promise<HabitCompletion[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.HABIT_GET_COMPLETIONS, habitId, startDate, endDate),
     getAllWithStats: (includeArchived?: boolean): Promise<HabitWithStats[]> =>

@@ -273,6 +273,8 @@ export const IPC_CHANNELS = {
   HABIT_DELETE: 'habit:delete',
   HABIT_COMPLETE: 'habit:complete',
   HABIT_UNCOMPLETE: 'habit:uncomplete',
+  HABIT_DECREMENT: 'habit:decrement',
+  HABIT_UPDATE_NOTE: 'habit:updateNote',
   HABIT_GET_COMPLETIONS: 'habit:getCompletions',
   HABIT_GET_WITH_STATS: 'habit:getWithStats',
 
@@ -387,6 +389,8 @@ export interface Habit {
   frequency: HabitFrequency;
   targetDays: number[]; // For weekly: 0-6 (Sun-Sat), for custom: specific days
   reminderTime: string | null; // HH:mm format
+  weeklyGoal: number; // Target completions per week (0 = no goal)
+  targetCount: number; // How many times per day (for countable habits like "drink 8 glasses")
   createdAt: string;
   updatedAt: string;
   archived: boolean;
@@ -397,6 +401,8 @@ export interface HabitCompletion {
   id: string;
   habitId: string;
   completedDate: string; // YYYY-MM-DD
+  count: number; // How many times completed (for countable habits)
+  note: string; // Optional note for the completion
   createdAt: string;
 }
 
@@ -405,7 +411,11 @@ export interface HabitWithStats extends Habit {
   currentStreak: number;
   longestStreak: number;
   completedToday: boolean;
+  todayCount: number; // How many times completed today
   completionRate: number; // percentage
+  weeklyProgress: number; // completions this week
+  bestDayOfWeek: number | null; // 0-6, day with most completions
+  totalCompletions: number; // all-time completions
 }
 
 // Habit DTOs
@@ -417,6 +427,8 @@ export interface CreateHabitDTO {
   frequency: HabitFrequency;
   targetDays?: number[];
   reminderTime?: string | null;
+  weeklyGoal?: number;
+  targetCount?: number;
 }
 
 export interface UpdateHabitDTO {
@@ -427,6 +439,8 @@ export interface UpdateHabitDTO {
   frequency?: HabitFrequency;
   targetDays?: number[];
   reminderTime?: string | null;
+  weeklyGoal?: number;
+  targetCount?: number;
   archived?: boolean;
 }
 

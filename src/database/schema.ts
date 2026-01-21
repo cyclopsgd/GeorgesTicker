@@ -207,4 +207,17 @@ CREATE INDEX IF NOT EXISTS idx_habit_completions_habit_id ON habit_completions(h
 CREATE INDEX IF NOT EXISTS idx_habit_completions_date ON habit_completions(completed_date);
 `,
   },
+  {
+    version: 6,
+    name: 'enhance_habits',
+    sql: `
+-- Add weekly goal and target count to habits
+ALTER TABLE habits ADD COLUMN weekly_goal INTEGER DEFAULT 0;
+ALTER TABLE habits ADD COLUMN target_count INTEGER DEFAULT 1;
+
+-- Add count and note to habit completions
+ALTER TABLE habit_completions ADD COLUMN count INTEGER DEFAULT 1;
+ALTER TABLE habit_completions ADD COLUMN note TEXT DEFAULT '';
+`,
+  },
 ];

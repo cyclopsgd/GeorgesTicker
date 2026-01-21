@@ -20,6 +20,8 @@ function rowToHabit(row: any): Habit {
     frequency: row.frequency as HabitFrequency,
     targetDays: JSON.parse(row.target_days || '[]'),
     reminderTime: row.reminder_time,
+    weeklyGoal: row.weekly_goal || 0,
+    targetCount: row.target_count || 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archived: Boolean(row.archived),
@@ -32,6 +34,8 @@ function rowToCompletion(row: any): HabitCompletion {
     id: row.id,
     habitId: row.habit_id,
     completedDate: row.completed_date,
+    count: row.count || 1,
+    note: row.note || '',
     createdAt: row.created_at,
   };
 }
@@ -128,8 +132,8 @@ export const habitService = {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO habits (id, name, description, color, icon, frequency, target_days, reminder_time, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO habits (id, name, description, color, icon, frequency, target_days, reminder_time, weekly_goal, target_count, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -141,6 +145,8 @@ export const habitService = {
       data.frequency,
       JSON.stringify(data.targetDays || []),
       data.reminderTime || null,
+      data.weeklyGoal || 0,
+      data.targetCount || 1,
       now,
       now
     );
@@ -202,6 +208,14 @@ export const habitService = {
       updates.push('reminder_time = ?');
       values.push(data.reminderTime);
     }
+    if (data.weeklyGoal !== undefined) {
+      updates.push('weekly_goal = ?');
+      values.push(data.weeklyGoal);
+    }
+    if (data.targetCount !== undefined) {
+      updates.push('target_count = ?');
+      values.push(data.targetCount);
+    }
     if (data.archived !== undefined) {
       updates.push('archived = ?');
       values.push(data.archived ? 1 : 0);
@@ -220,28 +234,66 @@ export const habitService = {
     return result.changes > 0;
   },
 
-  // Mark habit as complete for a date
-  complete(habitId: string, date?: string): HabitCompletion | null {
+  // Mark habit as complete for a date (or increment count if already completed)
+  complete(habitId: string, date?: string, note?: string): HabitCompletion | null {
     const db = getDatabase();
     const completedDate = date || new Date().toISOString().split('T')[0];
 
     // Check if already completed
     const existing = db.prepare(
       'SELECT * FROM habit_completions WHERE habit_id = ? AND completed_date = ?'
-    ).get(habitId, completedDate);
+    ).get(habitId, completedDate) as any;
 
-    if (existing) return rowToCompletion(existing);
+    if (existing) {
+      // Increment count if already exists
+      db.prepare(
+        'UPDATE habit_completions SET count = count + 1, note = COALESCE(?, note) WHERE id = ?'
+      ).run(note || null, existing.id);
+      const updated = db.prepare('SELECT * FROM habit_completions WHERE id = ?').get(existing.id);
+      return updated ? rowToCompletion(updated) : null;
+    }
 
     const id = uuidv4();
     const now = new Date().toISOString();
 
     db.prepare(`
-      INSERT INTO habit_completions (id, habit_id, completed_date, created_at)
-      VALUES (?, ?, ?, ?)
-    `).run(id, habitId, completedDate, now);
+      INSERT INTO habit_completions (id, habit_id, completed_date, count, note, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(id, habitId, completedDate, 1, note || '', now);
 
     const row = db.prepare('SELECT * FROM habit_completions WHERE id = ?').get(id);
     return row ? rowToCompletion(row) : null;
+  },
+
+  // Decrement completion count (or remove if count reaches 0)
+  decrementCompletion(habitId: string, date?: string): boolean {
+    const db = getDatabase();
+    const completedDate = date || new Date().toISOString().split('T')[0];
+
+    const existing = db.prepare(
+      'SELECT * FROM habit_completions WHERE habit_id = ? AND completed_date = ?'
+    ).get(habitId, completedDate) as any;
+
+    if (!existing) return false;
+
+    if (existing.count <= 1) {
+      // Remove the completion entirely
+      db.prepare('DELETE FROM habit_completions WHERE id = ?').run(existing.id);
+    } else {
+      // Decrement count
+      db.prepare('UPDATE habit_completions SET count = count - 1 WHERE id = ?').run(existing.id);
+    }
+
+    return true;
+  },
+
+  // Update completion note
+  updateCompletionNote(habitId: string, date: string, note: string): boolean {
+    const db = getDatabase();
+    const result = db.prepare(
+      'UPDATE habit_completions SET note = ? WHERE habit_id = ? AND completed_date = ?'
+    ).run(note, habitId, date);
+    return result.changes > 0;
   },
 
   // Remove completion for a date
@@ -295,7 +347,8 @@ export const habitService = {
   // Add statistics to a habit
   addStatsToHabit(habit: Habit): HabitWithStats {
     const db = getDatabase();
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
 
     // Get all completions for this habit in the last year
     const yearAgo = new Date();
@@ -303,13 +356,20 @@ export const habitService = {
     const yearAgoStr = yearAgo.toISOString().split('T')[0];
 
     const completions = db.prepare(`
-      SELECT completed_date FROM habit_completions
+      SELECT completed_date, count FROM habit_completions
       WHERE habit_id = ? AND completed_date >= ?
       ORDER BY completed_date DESC
-    `).all(habit.id, yearAgoStr) as { completed_date: string }[];
+    `).all(habit.id, yearAgoStr) as { completed_date: string; count: number }[];
 
     const completionDates = completions.map(c => c.completed_date);
-    const completedToday = completionDates.includes(today);
+    const completedToday = completionDates.includes(todayStr);
+
+    // Get today's count
+    const todayCompletion = completions.find(c => c.completed_date === todayStr);
+    const todayCount = todayCompletion?.count || 0;
+
+    // Calculate total completions (sum of all counts)
+    const totalCompletions = completions.reduce((sum, c) => sum + c.count, 0);
 
     // Calculate streaks
     const { current, longest } = calculateStreak(completionDates, habit.targetDays, habit.frequency);
@@ -322,7 +382,7 @@ export const habitService = {
     let actualCompletions = 0;
     const checkDate = new Date(thirtyDaysAgo);
 
-    while (checkDate <= new Date()) {
+    while (checkDate <= today) {
       const dateStr = checkDate.toISOString().split('T')[0];
       if (shouldDoHabitOnDate(checkDate, habit.targetDays, habit.frequency)) {
         expectedCompletions++;
@@ -337,12 +397,36 @@ export const habitService = {
       ? Math.round((actualCompletions / expectedCompletions) * 100)
       : 0;
 
+    // Calculate weekly progress (completions this week)
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+
+    const weeklyProgress = completions
+      .filter(c => c.completed_date >= startOfWeekStr)
+      .reduce((sum, c) => sum + c.count, 0);
+
+    // Calculate best day of week (most completions)
+    const dayOfWeekCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
+    completions.forEach(c => {
+      const date = new Date(c.completed_date);
+      dayOfWeekCounts[date.getDay()] += c.count;
+    });
+
+    const maxCount = Math.max(...dayOfWeekCounts);
+    const bestDayOfWeek = maxCount > 0 ? dayOfWeekCounts.indexOf(maxCount) : null;
+
     return {
       ...habit,
       currentStreak: current,
       longestStreak: longest,
       completedToday,
+      todayCount,
       completionRate,
+      weeklyProgress,
+      bestDayOfWeek,
+      totalCompletions,
     };
   },
 };

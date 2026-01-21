@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { SMART_LISTS, type SmartListId } from '../../shared/types';
+import { SMART_LISTS, type SmartListId, type HabitWithStats } from '../../shared/types';
 import { CalendarView } from './CalendarView';
 
 interface SidebarProps {
@@ -17,6 +17,50 @@ export function Sidebar({ onOpenPomodoro, onOpenHabits, onOpenStats, onShowCredi
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [showMiniCalendar, setShowMiniCalendar] = useState(true);
+  const [showQuickHabits, setShowQuickHabits] = useState(() => {
+    const saved = localStorage.getItem('showQuickHabits');
+    return saved !== 'false'; // Default to true
+  });
+  const [habits, setHabits] = useState<HabitWithStats[]>([]);
+  const [completingHabit, setCompletingHabit] = useState<string | null>(null);
+
+  // Load habits for quick-complete
+  useEffect(() => {
+    const loadHabits = async () => {
+      try {
+        const habitsWithStats = await window.electronAPI.habit.getAllWithStats(false);
+        setHabits(habitsWithStats);
+      } catch (error) {
+        console.error('Failed to load habits:', error);
+      }
+    };
+    loadHabits();
+    // Set up interval to refresh habits
+    const interval = setInterval(loadHabits, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Quick complete habit
+  const handleQuickCompleteHabit = async (habitId: string) => {
+    setCompletingHabit(habitId);
+    try {
+      await window.electronAPI.habit.complete(habitId);
+      // Refresh habits
+      const habitsWithStats = await window.electronAPI.habit.getAllWithStats(false);
+      setHabits(habitsWithStats);
+    } catch (error) {
+      console.error('Failed to complete habit:', error);
+    } finally {
+      setCompletingHabit(null);
+    }
+  };
+
+  // Toggle quick habits visibility
+  const toggleQuickHabits = () => {
+    const newValue = !showQuickHabits;
+    setShowQuickHabits(newValue);
+    localStorage.setItem('showQuickHabits', String(newValue));
+  };
 
   const handleCreateList = async () => {
     if (newListName.trim()) {
@@ -248,6 +292,78 @@ export function Sidebar({ onOpenPomodoro, onOpenHabits, onOpenStats, onShowCredi
           </ul>
         </div>
       </nav>
+
+      {/* Quick Habits */}
+      {habits.length > 0 && (
+        <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between px-2 py-1">
+            <h2 className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Today's Habits
+            </h2>
+            <button
+              onClick={toggleQuickHabits}
+              className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-400"
+              title={showQuickHabits ? 'Hide habits' : 'Show habits'}
+            >
+              <svg className={`w-3 h-3 transition-transform ${showQuickHabits ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+          </div>
+          {showQuickHabits && (
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {habits.slice(0, 5).map(habit => (
+                <div
+                  key={habit.id}
+                  className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700/50 group"
+                >
+                  <button
+                    onClick={() => handleQuickCompleteHabit(habit.id)}
+                    disabled={completingHabit === habit.id}
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      habit.completedToday
+                        ? 'border-green-500 bg-green-500 text-white'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500'
+                    } ${completingHabit === habit.id ? 'opacity-50' : ''}`}
+                    title={habit.completedToday ? `Done (${habit.todayCount}x)` : 'Mark as done'}
+                  >
+                    {habit.completedToday ? (
+                      habit.todayCount > 1 ? (
+                        <span className="text-[8px] font-bold">{habit.todayCount}</span>
+                      ) : (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )
+                    ) : completingHabit === habit.id ? (
+                      <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : null}
+                  </button>
+                  <span className="text-xs truncate flex-1" title={habit.name}>
+                    {habit.icon} {habit.name}
+                  </span>
+                  {habit.currentStreak > 0 && (
+                    <span className="text-[9px] text-orange-500 font-medium" title={`${habit.currentStreak} day streak`}>
+                      {habit.currentStreak}🔥
+                    </span>
+                  )}
+                </div>
+              ))}
+              {habits.length > 5 && (
+                <button
+                  onClick={onOpenHabits}
+                  className="w-full text-[10px] text-center text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 py-1"
+                >
+                  +{habits.length - 5} more habits
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Productivity Tools */}
       <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">

@@ -18,6 +18,7 @@ import { useApp } from '../contexts/AppContext';
 import { SortableTaskItem } from './SortableTaskItem';
 import { TaskItem } from './TaskItem';
 import { SearchBar } from './SearchBar';
+import { Toast } from './Toast';
 import { SMART_LISTS, type SmartListId, type TaskFilter } from '../../shared/types';
 import {
   parseTaskInput,
@@ -27,7 +28,7 @@ import {
 } from '../utils/taskParser';
 
 export function TaskList() {
-  const { tasks, selectedListId, lists, createTask, createTag, addTagToTask, loadTasks, tags, activeFilter, setActiveFilter } = useApp();
+  const { tasks, selectedListId, lists, createTask, createTag, addTagToTask, loadTasks, tags, activeFilter, setActiveFilter, deleteTask } = useApp();
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [quickAddPinned, setQuickAddPinned] = useState(() => {
@@ -35,6 +36,8 @@ export function TaskList() {
     const saved = localStorage.getItem('quickAddPinned');
     return saved === 'true';
   });
+  const [isClearing, setIsClearing] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Parse input as user types
@@ -187,6 +190,29 @@ export function TaskList() {
         await window.electronAPI.task.reorder(taskIds);
         await loadTasks();
       }
+    }
+  };
+
+  // Clear all completed tasks
+  const handleClearCompleted = async () => {
+    const count = completedTasks.length;
+    if (count === 0) return;
+
+    const confirmed = window.confirm(`Are you sure you want to delete ${count} completed task${count !== 1 ? 's' : ''}?`);
+    if (!confirmed) return;
+
+    setIsClearing(true);
+    try {
+      // Delete all completed tasks
+      for (const task of completedTasks) {
+        await deleteTask(task.id);
+      }
+      setToast({ message: `Cleared ${count} completed task${count !== 1 ? 's' : ''}`, type: 'success' });
+    } catch (error) {
+      console.error('Failed to clear completed tasks:', error);
+      setToast({ message: 'Failed to clear completed tasks', type: 'error' });
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -368,8 +394,18 @@ export function TaskList() {
             {/* Completed tasks section */}
             {showCompletedSection && (
               <div className="mt-4">
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800/50">
-                  Completed ({completedTasks.length})
+                <div className="px-4 py-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Completed ({completedTasks.length})
+                  </span>
+                  <button
+                    onClick={handleClearCompleted}
+                    disabled={isClearing}
+                    className="text-[10px] text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-0.5 rounded transition-colors disabled:opacity-50"
+                    title="Delete all completed tasks"
+                  >
+                    {isClearing ? 'Clearing...' : 'Clear All'}
+                  </button>
                 </div>
                 {completedTasks.map(task => (
                   <TaskItem key={task.id} task={task} />
@@ -380,6 +416,21 @@ export function TaskList() {
             {/* Show all tasks in completed view */}
             {(selectedListId as SmartListId) === 'completed' && (
               <div>
+                {tasks.length > 0 && (
+                  <div className="px-4 py-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      {tasks.length} Completed Task{tasks.length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                      onClick={handleClearCompleted}
+                      disabled={isClearing}
+                      className="text-[10px] text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-0.5 rounded transition-colors disabled:opacity-50"
+                      title="Delete all completed tasks"
+                    >
+                      {isClearing ? 'Clearing...' : 'Clear All'}
+                    </button>
+                  </div>
+                )}
                 {tasks.map(task => (
                   <TaskItem key={task.id} task={task} />
                 ))}
@@ -388,6 +439,15 @@ export function TaskList() {
           </>
         )}
       </div>
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
