@@ -31,6 +31,10 @@ import type {
   UpdateHabitDTO,
   TaskStats,
   DashboardStats,
+  MicrosoftAccount,
+  MicrosoftSyncResult,
+  MicrosoftSyncStatus,
+  MicrosoftConfigStatus,
 } from '../shared/types';
 
 // Expose protected methods that allow the renderer process to use
@@ -197,6 +201,26 @@ const electronAPI = {
       ipcRenderer.invoke(IPC_CHANNELS.STATS_GET_TASK_STATS),
     getDashboard: (): Promise<DashboardStats> =>
       ipcRenderer.invoke(IPC_CHANNELS.STATS_GET_DASHBOARD),
+  },
+
+  // Microsoft sync operations
+  microsoft: {
+    signIn: (): Promise<{ success: boolean; account?: MicrosoftAccount; error?: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_SIGN_IN),
+    signOut: (): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_SIGN_OUT),
+    getAccount: (): Promise<MicrosoftAccount | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_GET_ACCOUNT),
+    isSignedIn: (): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_IS_SIGNED_IN),
+    getConfigStatus: (): Promise<MicrosoftConfigStatus> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_GET_CONFIG_STATUS),
+    sync: (): Promise<MicrosoftSyncResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_SYNC),
+    getSyncStatus: (): Promise<MicrosoftSyncStatus> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_GET_SYNC_STATUS),
+    clearSyncData: (): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.MICROSOFT_CLEAR_SYNC_DATA),
   },
 };
 

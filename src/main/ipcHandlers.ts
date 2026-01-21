@@ -9,6 +9,18 @@ import { pomodoroService } from '../database/pomodoroService';
 import { habitService } from '../database/habitService';
 import { statsService } from '../database/statsService';
 import { addAndScheduleReminder, snoozeReminder, deleteReminder } from './reminderManager';
+import {
+  signInWithMicrosoft,
+  signOutFromMicrosoft,
+  getMicrosoftAccount,
+  isMicrosoftSignedIn,
+  getMicrosoftConfigStatus,
+} from './microsoftAuth';
+import {
+  syncWithMicrosoft,
+  getSyncStatus,
+  clearSyncData,
+} from './microsoftSync';
 
 // Settings stored in memory (will be persisted to database later)
 let settings: AppSettings = { ...DEFAULT_SETTINGS };
@@ -262,5 +274,38 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.STATS_GET_DASHBOARD, () => {
     return statsService.getDashboard();
+  });
+
+  // Microsoft sync handlers
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_SIGN_IN, () => {
+    return signInWithMicrosoft();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_SIGN_OUT, () => {
+    return signOutFromMicrosoft();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_GET_ACCOUNT, () => {
+    return getMicrosoftAccount();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_IS_SIGNED_IN, () => {
+    return isMicrosoftSignedIn();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_GET_CONFIG_STATUS, () => {
+    return getMicrosoftConfigStatus();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_SYNC, () => {
+    return syncWithMicrosoft();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_GET_SYNC_STATUS, () => {
+    return getSyncStatus();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MICROSOFT_CLEAR_SYNC_DATA, () => {
+    return clearSyncData();
   });
 }

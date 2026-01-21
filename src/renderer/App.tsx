@@ -11,9 +11,10 @@ import { PomodoroTimer } from './components/PomodoroTimer';
 import { HabitTracker } from './components/HabitTracker';
 import { StatsDashboard } from './components/StatsDashboard';
 import { GeorgeCredit } from './components/GeorgeCredit';
+import { MicrosoftSync } from './components/MicrosoftSync';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
-type ModalView = 'none' | 'pomodoro' | 'habits' | 'stats' | 'credit';
+type ModalView = 'none' | 'pomodoro' | 'habits' | 'stats' | 'credit' | 'microsoftSync';
 
 function AppContent() {
   const { viewMode } = useApp();
@@ -33,6 +34,7 @@ function AppContent() {
         onOpenHabits={() => setActiveModal('habits')}
         onOpenStats={() => setActiveModal('stats')}
         onShowCredit={() => setActiveModal('credit')}
+        onOpenMicrosoftSync={() => setActiveModal('microsoftSync')}
       />
       <main className="flex-1 flex overflow-hidden">
         {viewMode === 'list' && <TaskList />}
@@ -46,6 +48,7 @@ function AppContent() {
       <HabitTracker isOpen={activeModal === 'habits'} onClose={() => setActiveModal('none')} />
       <StatsDashboard isOpen={activeModal === 'stats'} onClose={() => setActiveModal('none')} />
       <GeorgeCredit isOpen={activeModal === 'credit'} onClose={() => setActiveModal('none')} />
+      {activeModal === 'microsoftSync' && <MicrosoftSync onClose={() => setActiveModal('none')} />}
     </div>
   );
 }

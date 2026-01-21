@@ -281,6 +281,16 @@ export const IPC_CHANNELS = {
   // Statistics
   STATS_GET_TASK_STATS: 'stats:getTaskStats',
   STATS_GET_DASHBOARD: 'stats:getDashboard',
+
+  // Microsoft Sync
+  MICROSOFT_SIGN_IN: 'microsoft:signIn',
+  MICROSOFT_SIGN_OUT: 'microsoft:signOut',
+  MICROSOFT_GET_ACCOUNT: 'microsoft:getAccount',
+  MICROSOFT_IS_SIGNED_IN: 'microsoft:isSignedIn',
+  MICROSOFT_GET_CONFIG_STATUS: 'microsoft:getConfigStatus',
+  MICROSOFT_SYNC: 'microsoft:sync',
+  MICROSOFT_GET_SYNC_STATUS: 'microsoft:getSyncStatus',
+  MICROSOFT_CLEAR_SYNC_DATA: 'microsoft:clearSyncData',
 } as const;
 
 // Application settings
@@ -473,4 +483,35 @@ export interface DashboardStats {
     averageStreak: number;
     longestStreak: number;
   };
+}
+
+// ============================================================================
+// Microsoft Sync Types
+// ============================================================================
+
+export interface MicrosoftAccount {
+  homeAccountId: string;
+  environment: string;
+  tenantId: string;
+  username: string;
+  localAccountId: string;
+  name?: string;
+}
+
+export interface MicrosoftSyncResult {
+  success: boolean;
+  pulled: number;
+  pushed: number;
+  errors: string[];
+}
+
+export interface MicrosoftSyncStatus {
+  lastSyncTime: string | null;
+  taskCount: number;
+  listCount: number;
+}
+
+export interface MicrosoftConfigStatus {
+  configured: boolean;
+  clientId: string;
 }

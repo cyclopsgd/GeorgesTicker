@@ -9,9 +9,10 @@ interface SidebarProps {
   onOpenHabits?: () => void;
   onOpenStats?: () => void;
   onShowCredit?: () => void;
+  onOpenMicrosoftSync?: () => void;
 }
 
-export function Sidebar({ onOpenPomodoro, onOpenHabits, onOpenStats, onShowCredit }: SidebarProps) {
+export function Sidebar({ onOpenPomodoro, onOpenHabits, onOpenStats, onShowCredit, onOpenMicrosoftSync }: SidebarProps) {
   const { lists, selectedListId, setSelectedListId, createList, deleteList, viewMode, setViewMode } = useApp();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [isCreatingList, setIsCreatingList] = useState(false);
@@ -404,8 +405,18 @@ export function Sidebar({ onOpenPomodoro, onOpenHabits, onOpenStats, onShowCredi
         </div>
       </div>
 
-      {/* Theme toggle */}
-      <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
+      {/* Microsoft Sync & Theme toggle */}
+      <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+        <button
+          onClick={onOpenMicrosoftSync}
+          className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors"
+          title="Sync with Microsoft To Do"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 23 23" fill="currentColor">
+            <path d="M0 0h11v11H0zM12 0h11v11H12zM0 12h11v11H0zM12 12h11v11H12z" />
+          </svg>
+          <span>Microsoft Sync</span>
+        </button>
         <button
           onClick={cycleTheme}
           className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
