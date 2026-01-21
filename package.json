@@ -28,7 +28,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "better-sqlite3": "^12.6.2",
-    "electron": "^40.0.0",
     "electron-store": "^11.0.2",
     "node-schedule": "^2.1.1",
     "react": "^19.2.3",
@@ -45,9 +44,13 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
+    "canvas": "^3.2.1",
     "concurrently": "^9.2.1",
+    "electron": "^40.0.0",
     "electron-builder": "^26.4.0",
+    "png-to-ico": "^3.0.1",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
@@ -63,8 +66,36 @@
       "dist/**/*",
       "node_modules/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "data/",
+        "to": "data/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TickTick Clone",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false
     },
     "mac": {
       "target": "dmg"
