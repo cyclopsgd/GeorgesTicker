@@ -36,11 +36,11 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <aside className="w-56 h-full bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       {/* App title */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">
+          <h1 className="text-lg font-bold text-primary-600 dark:text-primary-400">
             George's Ticker
           </h1>
           {/* View mode toggle */}
@@ -128,9 +128,9 @@ export function Sidebar() {
       )}
 
       {/* Smart Lists */}
-      <nav className="flex-1 overflow-y-auto p-2">
-        <div className="mb-4">
-          <h2 className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      <nav className="flex-1 overflow-y-auto p-1.5">
+        <div className="mb-3">
+          <h2 className="px-2 py-1 text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Smart Lists
           </h2>
           <ul>
@@ -138,11 +138,11 @@ export function Sidebar() {
               <li key={smartList.id}>
                 <button
                   onClick={() => setSelectedListId(smartList.id)}
-                  className={`sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                  className={`sidebar-item w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm ${
                     selectedListId === smartList.id ? 'active' : ''
                   }`}
                 >
-                  <span className="text-lg">{smartList.icon}</span>
+                  <span className="text-base">{smartList.icon}</span>
                   <span className="flex-1">{smartList.name}</span>
                 </button>
               </li>
@@ -152,17 +152,17 @@ export function Sidebar() {
 
         {/* User Lists */}
         <div>
-          <div className="flex items-center justify-between px-3 py-2">
-            <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-2 py-1">
+            <h2 className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Lists
             </h2>
             <button
               onClick={() => setIsCreatingList(true)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
               title="Add List"
             >
               <svg
-                className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -178,7 +178,7 @@ export function Sidebar() {
           </div>
 
           {isCreatingList && (
-            <div className="px-3 py-1">
+            <div className="px-2 py-1">
               <input
                 type="text"
                 value={newListName}
@@ -190,7 +190,7 @@ export function Sidebar() {
                   }
                 }}
                 placeholder="List name..."
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:border-primary-500"
+                className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:border-primary-500"
                 autoFocus
               />
             </div>
@@ -201,12 +201,12 @@ export function Sidebar() {
               <li key={list.id} className="group">
                 <button
                   onClick={() => setSelectedListId(list.id)}
-                  className={`sidebar-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left ${
+                  className={`sidebar-item w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm ${
                     selectedListId === list.id ? 'active' : ''
                   }`}
                 >
                   <span
-                    className="w-3 h-3 rounded-full"
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: list.color }}
                   />
                   <span className="flex-1 truncate">{list.name}</span>
@@ -217,11 +217,11 @@ export function Sidebar() {
                         deleteList(list.id);
                       }
                     }}
-                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-opacity"
+                    className="p-0.5 opacity-0 group-hover:opacity-100 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-opacity"
                     title="Delete list"
                   >
                     <svg
-                      className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                      className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -242,13 +242,13 @@ export function Sidebar() {
       </nav>
 
       {/* Theme toggle */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="px-2 py-2 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={cycleTheme}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
         >
           {resolvedTheme === 'dark' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -257,7 +257,7 @@ export function Sidebar() {
               />
             </svg>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

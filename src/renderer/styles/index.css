@@ -133,3 +133,79 @@ textarea:focus {
   background-color: #991b1b;
   color: #fee2e2;
 }
+
+/* Checkmark animation */
+@keyframes check-draw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-check path {
+  stroke-dasharray: 24;
+  animation: check-draw 0.3s ease-out forwards;
+}
+
+/* Toast/notification animations */
+@keyframes slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.toast-enter {
+  animation: slide-up 0.2s ease-out forwards;
+}
+
+.toast-exit {
+  animation: fade-out 0.15s ease-in forwards;
+}
+
+/* Compact text sizes */
+.text-2xs {
+  font-size: 0.65rem;
+  line-height: 0.875rem;
+}
+
+/* Smoother transitions */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Keyboard focus ring */
+.focus-ring:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Subtle pulse animation for notifications */
+@keyframes subtle-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}

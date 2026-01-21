@@ -175,14 +175,14 @@ export function TaskList() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="flex-shrink-0 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      {/* Header - compact */}
+      <header className="flex-shrink-0 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
               {getListName()}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {incompleteTasks.length} task{incompleteTasks.length !== 1 ? 's' : ''}
               {activeFilter && ' found'}
             </p>
@@ -195,11 +195,11 @@ export function TaskList() {
         </div>
       </header>
 
-      {/* Quick add bar */}
+      {/* Quick add bar - compact */}
       {(selectedListId as SmartListId) !== 'completed' && (
-        <div className="flex-shrink-0 px-6 py-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
           {isAddingTask ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <input
                   ref={inputRef}
@@ -213,11 +213,11 @@ export function TaskList() {
                     }
                   }}
                   placeholder={quickAddPlaceholder || "What needs to be done?"}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                  className="flex-1 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                 />
                 <button
                   onClick={handleAddTask}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded transition-colors"
                 >
                   Add
                 </button>
@@ -226,18 +226,18 @@ export function TaskList() {
                     setIsAddingTask(false);
                     setNewTaskTitle('');
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                 >
                   Cancel
                 </button>
               </div>
               {/* Parsed chips preview */}
               {parsedChips.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pl-1">
+                <div className="flex flex-wrap gap-1 pl-0.5">
                   {parsedChips.map((chip, index) => (
                     <span
                       key={index}
-                      className={`inline-flex items-center px-2 py-0.5 text-xs rounded-full ${
+                      className={`inline-flex items-center px-1.5 py-0.5 text-[10px] rounded-full ${
                         chip.type === 'date'
                           ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                           : chip.type === 'priority'
@@ -251,8 +251,6 @@ export function TaskList() {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {chip.type === 'date' && '📅 '}
-                      {chip.type === 'priority' && '⚡ '}
                       {chip.label}
                     </span>
                   ))}
@@ -262,10 +260,10 @@ export function TaskList() {
           ) : (
             <button
               onClick={() => setIsAddingTask(true)}
-              className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
             >
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -278,7 +276,7 @@ export function TaskList() {
                 />
               </svg>
               <span>Add Task</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-1">
                 Ctrl+N
               </span>
             </button>
