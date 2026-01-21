@@ -28,7 +28,7 @@ export function CalendarView({ onDateSelect, compact = false }: CalendarViewProp
     return new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
   }, [currentDate]);
 
-  // Generate calendar days
+  // Generate calendar days (always 42 cells = 6 weeks for consistent height)
   const calendarDays = useMemo(() => {
     const days: (Date | null)[] = [];
 
@@ -41,6 +41,11 @@ export function CalendarView({ onDateSelect, compact = false }: CalendarViewProp
     // Add all days of the month
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+    }
+
+    // Pad to exactly 42 cells (6 weeks) for consistent height
+    while (days.length < 42) {
+      days.push(null);
     }
 
     return days;

@@ -41,6 +41,11 @@ export function TaskDetail() {
     setIsTaskDetailOpen,
   } = useApp();
 
+  // Panel states: collapsed (narrow bar), expanded (full panel), pinned (always expanded)
+  const [panelCollapsed, setPanelCollapsed] = useState(() => {
+    const saved = localStorage.getItem('taskDetailCollapsed');
+    return saved === 'true';
+  });
   const [detailPinned, setDetailPinned] = useState(() => {
     const saved = localStorage.getItem('taskDetailPinned');
     return saved === 'true';
@@ -96,15 +101,57 @@ export function TaskDetail() {
     setReminders(taskReminders);
   };
 
-  // Show panel if pinned OR if explicitly open with a selected task
-  const shouldShowPanel = detailPinned || (isTaskDetailOpen && selectedTask);
+  // Toggle collapse state
+  const handleToggleCollapse = () => {
+    const newCollapsed = !panelCollapsed;
+    setPanelCollapsed(newCollapsed);
+    localStorage.setItem('taskDetailCollapsed', String(newCollapsed));
+  };
 
-  if (!shouldShowPanel) {
-    return null;
+  // Toggle pin state
+  const handleTogglePin = () => {
+    const newPinned = !detailPinned;
+    setDetailPinned(newPinned);
+    localStorage.setItem('taskDetailPinned', String(newPinned));
+    // If pinning, ensure panel is expanded
+    if (newPinned && panelCollapsed) {
+      setPanelCollapsed(false);
+      localStorage.setItem('taskDetailCollapsed', 'false');
+    }
+  };
+
+  // Determine if we should show the panel at all
+  const isEffectivelyCollapsed = panelCollapsed && !detailPinned;
+
+  // Show collapsed bar when collapsed (but not completely hidden)
+  if (isEffectivelyCollapsed) {
+    return (
+      <div className="w-10 h-full bg-gray-50 dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col items-center py-4">
+        {/* Expand button */}
+        <button
+          onClick={handleToggleCollapse}
+          className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+          title="Expand task details"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {/* Task indicator when there's a selected task */}
+        {selectedTask && (
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500" title={selectedTask.title} />
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 writing-mode-vertical transform rotate-180" style={{ writingMode: 'vertical-rl' }}>
+              {selectedTask.title.length > 20 ? selectedTask.title.slice(0, 20) + '...' : selectedTask.title}
+            </span>
+          </div>
+        )}
+      </div>
+    );
   }
 
-  // Show placeholder if pinned but no task selected
-  if (detailPinned && !selectedTask) {
+  // Show placeholder if expanded/pinned but no task selected
+  if (!selectedTask) {
     return (
       <div className="w-96 h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 flex flex-col">
         {/* Header */}
@@ -115,17 +162,30 @@ export function TaskDetail() {
           <div className="flex items-center gap-1">
             {/* Pin toggle */}
             <button
-              onClick={() => {
-                setDetailPinned(false);
-                localStorage.setItem('taskDetailPinned', 'false');
-              }}
-              className="p-1 text-blue-500 bg-blue-50 dark:bg-blue-900/30 rounded transition-colors"
-              title="Unpin panel"
+              onClick={handleTogglePin}
+              className={`p-1 rounded transition-colors ${
+                detailPinned
+                  ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+              title={detailPinned ? 'Unpin panel' : 'Pin panel open'}
             >
-              <svg className="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill={detailPinned ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
             </button>
+            {/* Collapse button */}
+            {!detailPinned && (
+              <button
+                onClick={handleToggleCollapse}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-gray-500"
+                title="Collapse panel"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
         {/* Placeholder content */}
@@ -335,11 +395,12 @@ export function TaskDetail() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
           </button>
-          {/* Close button - only show when not pinned */}
+          {/* Collapse button - only show when not pinned */}
           {!detailPinned && (
             <button
-              onClick={handleClose}
+              onClick={handleToggleCollapse}
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+              title="Collapse panel"
             >
               <svg
                 className="w-5 h-5 text-gray-500"
@@ -351,7 +412,7 @@ export function TaskDetail() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
             </button>
